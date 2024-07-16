@@ -13,11 +13,11 @@ class Ingredients {
         this.beans = 0;
     }
 
-    public Ingredients(int water, int milk, int beans) {
-        this.water = water;
-        this.milk = milk;
-        this.beans = beans;
-    }
+//    public Ingredients(int water, int milk, int beans) {
+//        this.water = water;
+//        this.milk = milk;
+//        this.beans = beans;
+//    }
 
     public int getWater() {
         return water;
