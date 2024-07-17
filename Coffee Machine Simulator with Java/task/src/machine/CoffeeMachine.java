@@ -4,10 +4,10 @@ import java.util.ArrayList;
 import java.util.Scanner;
 
 class Speciality {
-    private int water;
-    private int milk;
-    private int beans;
-    private int cost;
+    final private int water;
+    final private int milk;
+    final private int beans;
+    final private int cost;
 
     public Speciality(int water, int milk, int beans, int cost) {
         this.water = water;
@@ -39,7 +39,7 @@ class Machine {
     private int beans;
     private int cups;
     private int money;
-    private ArrayList<Speciality> specialities;
+    final private ArrayList<Speciality> specialities;
 
     public Machine (int water, int milk, int beans, int cups, int money) {
         this.water = water;
@@ -47,7 +47,7 @@ class Machine {
         this. beans = beans;
         this.cups = cups;
         this.money = money;
-        this.specialities = new ArrayList<Speciality>();
+        this.specialities = new ArrayList<>();
         this.specialities.add(new Speciality(250, 0, 16, 4));
         this.specialities.add(new Speciality(350, 75, 20, 7));
         this.specialities.add(new Speciality(200, 100, 12, 6));
