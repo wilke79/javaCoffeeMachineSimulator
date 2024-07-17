@@ -33,7 +33,12 @@ class Speciality {
     }
 }
 
+enum State {
+    ACTION, BUY, FILL_WATER, FILL_MILK, FILL_BEANS, FILL_CUPS
+}
+
 class Machine {
+    private State state;
     private int water;
     private int milk;
     private int beans;
@@ -42,6 +47,7 @@ class Machine {
     final private ArrayList<Speciality> specialities;
 
     public Machine (int water, int milk, int beans, int cups, int money) {
+        this.state = State.ACTION;
         this.water = water;
         this.milk = milk;
         this. beans = beans;
@@ -63,52 +69,47 @@ class Machine {
     }
 
     private void makeCoffee(int choice) {
-        this.water -= this.specialities.get(choice - 1).getWater();
-        this.milk -= this.specialities.get(choice - 1).getMilk();
-        this.beans -= this.specialities.get(choice - 1).getBeans();
-        this.cups -= 1;
-        this.money += this.specialities.get(choice - 1).getCost();
+        if (this.water < this.specialities.get(choice - 1).getWater()) {
+            System.out.println("Sorry, not enough water!");
+        } else if (this.milk < this.specialities.get(choice - 1).getMilk()) {
+            System.out.println("Sorry, not enough milk!");
+        } else if (this.beans < this.specialities.get(choice - 1).getBeans()) {
+            System.out.println("Sorry, not enough coffee beans!");
+        } else if (this.cups < 1) {
+            System.out.println("Sorry, not enough disposable cups!");
+        } else {
+            System.out.println("I have enough resources, making you a coffee!");
+            this.water -= this.specialities.get(choice - 1).getWater();
+            this.milk -= this.specialities.get(choice - 1).getMilk();
+            this.beans -= this.specialities.get(choice - 1).getBeans();
+            this.cups -= 1;
+            this.money += this.specialities.get(choice - 1).getCost();
+        }
+        this.state = State.ACTION;
     }
 
     public void buy() {
-        Scanner scanner = new Scanner(System.in);
-        System.out.println("What do you want to buy? 1 - espresso, 2 - latte, 3 - cappuccino:");
-        String choice = scanner.nextLine();
-        try {
-            switch (Integer.parseInt(choice)) {
-                case 1, 2, 3 -> this.makeCoffee(Integer.parseInt(choice));
-                default -> System.out.println("Invalid input!");
-            }
-        } catch (NumberFormatException e) {
-            System.out.println("Invalid input!");
-        }
+        this.state = State.BUY;
     }
 
-    public void fill() {
-        Scanner scanner = new Scanner(System.in);
-        System.out.println("Write how many ml of water you want to add:");
-        try {
-            this.water += Integer.parseInt(scanner.nextLine());
-        } catch (NumberFormatException e) {
-            System.out.println("Invalid input!");
-        }
-        System.out.println("Write how many ml of milk you want to add:");
-        try {
-            this.milk += Integer.parseInt(scanner.nextLine());
-        } catch (NumberFormatException e) {
-            System.out.println("Invalid input!");
-        }
-        System.out.println("Write how many grams of coffee beans you want to add:");
-        try {
-            this.beans += Integer.parseInt(scanner.nextLine());
-        } catch (NumberFormatException e) {
-            System.out.println("Invalid input!");
-        }
-        System.out.println("Write how many disposable cups you want to add:");
-        try {
-            this.cups += Integer.parseInt(scanner.nextLine());
-        } catch (NumberFormatException e) {
-            System.out.println("Invalid input!");
+    public void fill(int numberToAdd) {
+        switch (this.state) {
+            case FILL_WATER -> {
+                this.state = State.FILL_MILK;
+                this.water += numberToAdd;
+            }
+            case FILL_MILK -> {
+                this.milk += numberToAdd;
+                this.state = State.FILL_BEANS;
+            }
+            case FILL_BEANS -> {
+                this.beans += numberToAdd;
+                this.state = State.FILL_CUPS;
+            }
+            case FILL_CUPS -> {
+                this.cups += numberToAdd;
+                this.state = State.ACTION;
+            }
         }
     }
 
@@ -116,39 +117,64 @@ class Machine {
         System.out.printf("I gave you $%d\n", this.money);
         this.money = 0;
     }
+
+    public String getMessage() {
+        return switch (this.state) {
+            case ACTION -> "Write action (buy, fill, take, remaining, exit):";
+            case BUY -> "What do you want to buy? 1 - espresso, 2 - latte, 3 - cappuccino:";
+            case FILL_WATER -> "Write how many ml of water you want to add:";
+            case FILL_MILK -> "Write how many ml of milk you want to add:";
+            case FILL_BEANS -> "Write how many grams of coffee beans you want to add:";
+            case FILL_CUPS -> "Write how many disposable cups you want to add:";
+        };
+    }
+
+    public void process(String input) {
+        switch (this.state) {
+            case ACTION -> {
+                switch (input) {
+                    case "buy" -> this.buy();
+                    case "fill" -> this.state = State.FILL_WATER;
+                    case "take" -> this.take();
+                    case "remaining" -> this.printState();
+                    default -> System.out.println("Invalid input!");
+                }
+            }
+            case BUY -> {
+                try {
+                    switch (input) {
+                        case "1", "2", "3" -> this.makeCoffee(Integer.parseInt(input));
+                        case "back" -> this.state = State.ACTION;
+                        default -> System.out.println("Invalid input!");
+                    }
+                } catch (NumberFormatException e) {
+                    System.out.println("Invalid input!");
+                }
+
+            }
+            case FILL_WATER, FILL_MILK, FILL_BEANS, FILL_CUPS -> {
+                try {
+                    this.fill(Integer.parseInt(input));
+                } catch (NumberFormatException e) {
+                    System.out.println("Invalid input!");
+                }
+
+            }
+        }
+    }
 }
 
 public class CoffeeMachine {
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
         Machine coffeeMachine = new Machine(400, 540, 120, 9, 550);
-        coffeeMachine.printState();
-        System.out.println("Write action (buy, fill, take):");
-        String choice = scanner.nextLine();
-        switch (choice) {
-            case "buy" -> coffeeMachine.buy();
-            case "fill" -> coffeeMachine.fill();
-            case "take" -> coffeeMachine.take();
-            default -> System.out.println("Invalid input!");
-        }
-        coffeeMachine.printState();
-//        System.out.println("Write how many cups of coffee you will need:");
-//        int cups = 0;
-//        try {
-//            cups = Integer.parseInt(scanner.nextLine());
-//        } catch (NumberFormatException e) {
-//            System.out.println("Invalid input!");
-//        }
-//        int cupsAvailable = Math.min((int) Math.floor((double) supplies.getWater() / WATER_PER_CUP),
-//                Math.min((int) Math.floor((double) supplies.getMilk() / MILK_PER_CUP),
-//                        (int) Math.floor((double) supplies.getBeans() / BEANS_PER_CUP)));
-//        if (cupsAvailable < cups) {
-//            System.out.printf("No, I can make only %d cup(s) of coffee", cupsAvailable);
-//        } else {
-//            System.out.print("Yes, I can make that amount of coffee");
-//            if (cupsAvailable > cups) {
-//                System.out.printf("(and even %d more than that)\n", cupsAvailable - cups);
-//            }
-//        }
+        String choice;
+        do {
+            System.out.println(coffeeMachine.getMessage());
+            choice = scanner.nextLine();
+            if (!choice.equals("exit")) {
+                coffeeMachine.process(choice);
+            }
+        } while (!choice.equals("exit"));
     }
 }
